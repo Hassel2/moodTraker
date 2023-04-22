@@ -1,7 +1,7 @@
 #!/bin/bash 
 
-s_flag=''
-r_flag=''
+s_flag='false'
+r_flag='false'
 name=''
 password=''
 
@@ -12,7 +12,7 @@ Usage:\n\
   -s - run existing container\n\
       example: ./database_start.sh -s -n example\n\
   -r - create new container\n\
-      example ./database_start.sh -r -n example -p 1234\n\
+      example: ./database_start.sh -r -n example -p 1234\n\
   \n\
   -n - name of the containter\n\
   -p - mysql root password\
@@ -37,11 +37,15 @@ if $s_flag; then
     fi;
 
     docker start -i $name;
-elif $r_flag; then
-    if [[ $name = '' ]] || [[ $password = '' ]]; then
+    exit 0;
+fi;
+
+if $r_flag; then
+    if [[ $name = '' || $password = '' ]]; then
         print_usage;
         exit 1;
     fi;
 
     docker run --name $name -e MYSQL_ROOT_PASSWORD=$password -e LANG=C.UTF-8 -d mysql/mysql-server:5.7
+    exit 0;
 fi;
