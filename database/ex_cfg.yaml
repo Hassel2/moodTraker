@@ -1,0 +1,4 @@
+database:
+  host: localhost
+  user: mood
+  password: 1234

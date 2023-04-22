@@ -54,7 +54,6 @@ if $r_flag; then
         exit 1;
     fi;
 
-    docker run --name $name -e MYSQL_ROOT_PASSWORD=$password -e LANG=C.UTF-8 -d mysql/mysql-server:5.7 & 
     docker run --name $name -e MYSQL_ROOT_PASSWORD=$password -e LANG=C.UTF-8 -p 3306:3306 -d mysql/mysql-server:latest
     exit 0;
 fi;
