@@ -25,8 +25,10 @@ Docker example:
 "
 }
 
-while getopts 'srn:p:' flag; do
+while getopts 'hsrn:p:' flag; do
   case "${flag}" in
+    h) print_usage
+       exit 1 ;;
     s) s_flag='true' ;;
     r) r_flag='true' ;;
     n) name="${OPTARG}" ;;
@@ -42,7 +44,7 @@ if $s_flag; then
         exit 1;
     fi;
 
-    docker start -i $name; &
+    docker start -i $name & 
     exit 0;
 fi;
 
@@ -52,6 +54,9 @@ if $r_flag; then
         exit 1;
     fi;
 
-    docker run --name $name -e MYSQL_ROOT_PASSWORD=$password -e LANG=C.UTF-8 -d mysql/mysql-server:5.7 &
+    docker run --name $name -e MYSQL_ROOT_PASSWORD=$password -e LANG=C.UTF-8 -d mysql/mysql-server:5.7 & 
     exit 0;
 fi;
+
+print_usage
+exit 1;
