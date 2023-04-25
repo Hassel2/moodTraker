@@ -17,17 +17,17 @@ class Database:
                 host=str(self.config["host"]),
                 user=str(self.config["user"]),
                 password=str(self.config["password"]),
+                database=str(self.config["dbname"])
             )
         except Error as e:
             print(e)
 
 
     def migrate(self):
-        backend = get_backend(f'mysql://{self.config["user"]}:{self.config["password"]}@{self.config["host"]}/mood')
+        backend = get_backend(f'mysql://{self.config["user"]}:{self.config["password"]}@{self.config["host"]}/{self.config["dbname"]}')
         migrations = read_migrations('./database/migrations')
 
         with backend.lock():
             # Apply any outstanding migrations
             backend.apply_migrations(backend.to_apply(migrations))
-
 
