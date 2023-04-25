@@ -3,7 +3,7 @@
 #
 from yoyo import step
 
-__depends__ = {"0006_create_chat"}
+__depends__ = {"001_create_chat"}
 
 steps = [ 
     step(

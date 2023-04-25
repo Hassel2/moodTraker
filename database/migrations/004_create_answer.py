@@ -3,7 +3,7 @@
 #
 from yoyo import step
 
-__depends__ = {"0006_create_chat"}
+__depends__ = {"001_create_chat"}
 
 steps = [ 
     step(
@@ -21,7 +21,7 @@ steps = [
             `answercol` VARCHAR(45) NULL,
             PRIMARY KEY (`id_answer`),
             INDEX `user_id_FK_idx` (`id_chat` ASC) VISIBLE,
-            CONSTRAINT `id_chat_FK`
+            CONSTRAINT `id_chat_FK2`
             FOREIGN KEY (`id_chat`)
             REFERENCES `mood`.`chat` (`id_chat`)
             ON DELETE NO ACTION
