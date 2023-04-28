@@ -1,0 +1,5 @@
+pyyaml
+mysql.connector
+pymysql
+yoyo-migrations
+python-telegram-bot
