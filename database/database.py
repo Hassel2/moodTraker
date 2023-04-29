@@ -5,26 +5,35 @@ from yoyo import get_backend
 
 
 class Database:
-    def __init__(self):
-        with open("./database/cfg.yaml", "r") as stream:
-            try:
-                self.config = yaml.safe_load(stream)["database"]
-            except yaml.YAMLError as exc:
-                print(exc)
+    config = None
+    connection = None
+    
 
+    @staticmethod
+    def connect():
         try:
-            self.connetion =  connect(
-                host=str(self.config["host"]),
-                user=str(self.config["user"]),
-                password=str(self.config["password"]),
-                database=str(self.config["dbname"])
+            Database.connetion =  connect(
+                host=str(Database.config["host"]),
+                user=str(Database.config["user"]),
+                password=str(Database.config["password"]),
+                database=str(Database.config["dbname"])
             )
         except Error as e:
             print(e)
 
+    
+    @staticmethod 
+    def parse_config():
+        with open("./database/cfg.yaml", "r") as stream:
+            try:
+                Database.config = yaml.safe_load(stream)["database"]
+            except yaml.YAMLError as exc:
+                print(exc)
 
-    def migrate(self):
-        backend = get_backend(f'mysql://{self.config["user"]}:{self.config["password"]}@{self.config["host"]}/{self.config["dbname"]}')
+
+    @staticmethod
+    def migrate():
+        backend = get_backend(f'mysql://{Database.config["user"]}:{Database.config["password"]}@{Database.config["host"]}/{Database.config["dbname"]}')
         migrations = read_migrations('./database/migrations')
 
         with backend.lock():
