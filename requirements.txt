@@ -1,5 +1,6 @@
 pyyaml
-mysql.connector
+mysql-connector-python
 pymysql
+cryptography
 yoyo-migrations
 python-telegram-bot
