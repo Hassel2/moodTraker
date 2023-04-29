@@ -24,8 +24,8 @@ def start():
 
 
 def setup():
-    db = Database()
-    db.migrate()
+    Database.parse_config()
+    Database.migrate()
 
 
 if __name__ == "__main__":
