@@ -1,3 +1,4 @@
+import atexit
 import yaml
 from mysql.connector import connect, Error
 from yoyo import read_migrations
@@ -15,12 +16,15 @@ class Database:
 
         query = (
             """
-            INSERT INTO chat (id_chat, gender, age, status)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO `chat` (`id_chat`, `gender`, `age`, `status`)
+            VALUES (%s, %s, %s, %s);
             """
         )
 
         cursor.execute(query, (id_chat, gender, age, status))
+        
+        Database.connection.commit()
+
         cursor.close()
     
 
