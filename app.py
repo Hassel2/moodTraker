@@ -5,6 +5,7 @@ import telegram.ext
 from telegram.ext import Application
 from telegram.ext import ContextTypes
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from database.database import Database
 
 class App:
     config = None 
@@ -17,6 +18,9 @@ class App:
                 App.config = yaml.safe_load(stream)["app"]
             except yaml.YAMLError as exc:
                 print(exc)
+
+        Database.parse_config()
+        Database.connect()
 
         builder = Application.builder()
 
