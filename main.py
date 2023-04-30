@@ -24,11 +24,13 @@ def main():
 
 def start():
     App.build_and_listen()
+    Database.connection.close()
 
 
 def setup():
     Database.parse_config()
     Database.migrate()
+    Database.connection.close()
 
 
 if __name__ == "__main__":
