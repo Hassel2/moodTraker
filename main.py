@@ -2,6 +2,7 @@
 
 import argparse
 from database.database import Database
+from app import App
 
 def main():
     parser = argparse.ArgumentParser()
@@ -22,7 +23,7 @@ def main():
 
 
 def start():
-    pass
+    App.build_and_listen()
 
 
 def setup():
