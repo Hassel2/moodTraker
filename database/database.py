@@ -13,19 +13,33 @@ class Database:
     @staticmethod
     def new_chat(id_chat, gender, age, status='active'):
         cursor = Database.connection.cursor()
-
-        query = (
+        select = (
             """
-            INSERT INTO `chat` (`id_chat`, `gender`, `age`, `status`)
-            VALUES (%s, %s, %s, %s);
+            SELECT COUNT(*) FROM `chat`
+            WHERE `id_chat` = %s;
             """
         )
 
-        cursor.execute(query, (id_chat, gender, age, status))
-        
-        Database.connection.commit()
+        cursor.execute(select, (id_chat, ))
+
+        rows_count = cursor.fetchone()[0]
 
         cursor.close()
+
+        if rows_count == 0:
+            cursor = Database.connection.cursor()
+            insert = (
+                """
+                INSERT INTO `chat` (`id_chat`, `gender`, `age`, `status`)
+                VALUES (%s, %s, %s, %s);
+                """
+            )
+
+            cursor.execute(insert, (id_chat, gender, age, status))
+            
+            Database.connection.commit()
+
+            cursor.close()
     
 
     @staticmethod
