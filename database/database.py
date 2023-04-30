@@ -7,12 +7,27 @@ from yoyo import get_backend
 class Database:
     config = None
     connection = None
+
+
+    @staticmethod
+    def new_chat(id_chat, gender, age, status='active'):
+        cursor = Database.connection.cursor()
+
+        query = (
+            """
+            INSERT INTO chat (id_chat, gender, age, status)
+            VALUES (%s, %s, %s, %s)
+            """
+        )
+
+        cursor.execute(query, (id_chat, gender, age, status))
+        cursor.close()
     
 
     @staticmethod
     def connect():
         try:
-            Database.connetion =  connect(
+            Database.connection =  connect(
                 host=str(Database.config["host"]),
                 user=str(Database.config["user"]),
                 password=str(Database.config["password"]),
