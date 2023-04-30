@@ -30,7 +30,6 @@ def start():
 def setup():
     Database.parse_config()
     Database.migrate()
-    Database.connection.close()
 
 
 if __name__ == "__main__":

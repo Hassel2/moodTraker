@@ -1,4 +1,4 @@
-import atexit
+from datetime import datetime
 import yaml
 from mysql.connector import connect, Error
 from yoyo import read_migrations
@@ -8,6 +8,23 @@ from yoyo import get_backend
 class Database:
     config = None
     connection = None
+
+
+    @staticmethod
+    def form_answer(id_chat, rating, answer_comment=None):
+        cursor = Database.connection.cursor()
+        insert = (
+            """
+            INSERT INTO `answer` (`id_chat`, `answer_time`, `rating`, `answer_comment`)
+            VALUES (%s, %s, %s, %s)
+            """
+        )
+
+        cursor.execute(insert, (id_chat, datetime.now(), rating, answer_comment))
+        
+        Database.connection.commit()
+
+        cursor.close()
 
 
     @staticmethod
