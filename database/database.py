@@ -15,18 +15,18 @@ class Database:
         cursor = Database.connection.cursor()
         select = (
             """
-            SELECT COUNT(*) FROM `chat`
+            SELECT * FROM `chat`
             WHERE `id_chat` = %s;
             """
         )
 
         cursor.execute(select, (id_chat, ))
 
-        rows_count = cursor.fetchone()[0]
+        rows = cursor.fetchone()
 
         cursor.close()
 
-        if rows_count == 0:
+        if rows == None:
             cursor = Database.connection.cursor()
             insert = (
                 """
@@ -36,7 +36,22 @@ class Database:
             )
 
             cursor.execute(insert, (id_chat, gender, age, status))
-            
+
+            Database.connection.commit()
+
+            cursor.close()
+        elif rows[1] == 'inactive':
+            cursor = Database.connection.cursor()
+            update = (
+                """
+                UPDATE `chat``
+                SET `status`='active'
+                WHERE %s
+                """
+            )
+
+            cursor.execute(update, (id_chat, ))
+
             Database.connection.commit()
 
             cursor.close()
