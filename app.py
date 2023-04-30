@@ -28,6 +28,7 @@ class App:
         application = builder.build()
 
         application.add_handler(telegram.ext.CommandHandler("form", App.form))
+        application.add_handler(telegram.ext.CommandHandler("start", App.start))
         application.add_handler(telegram.ext.CallbackQueryHandler(App.button))
 
         application.run_polling()
@@ -38,7 +39,17 @@ class App:
         update: telegram.Update, 
         context: ContextTypes.DEFAULT_TYPE 
     ) -> None:
-         
+        id_chat = update.effective_chat.id
+
+        Database.new_chat(
+            id_chat=id_chat,
+            gender='male',
+            age=31,
+        )
+
+        await update.message.reply_text(
+            "Привет, я помогу тебе отслеживать твое эмоциональное состояние!"
+        )
 
     @staticmethod 
     async def form(
