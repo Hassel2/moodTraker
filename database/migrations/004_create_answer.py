@@ -12,7 +12,7 @@ steps = [
     step(
         """
         CREATE TABLE IF NOT EXISTS `mood`.`answer` (
-            `id_answer` INT NOT NULL,
+            `id_answer` INT NOT NULL AUTO_INCREMENT,
             `id_chat` INT NOT NULL,
             `answer_time` DATETIME NOT NULL,
             `rating` INT(2) UNSIGNED NOT NULL,
