@@ -58,15 +58,18 @@ class App:
     ) -> None:
         keyboard = [
             [
-                InlineKeyboardButton("1", callback_data="1"),
-                InlineKeyboardButton("2", callback_data="2"),
-                InlineKeyboardButton("3", callback_data="3"),
+                InlineKeyboardButton("7", callback_data="1"),
+                InlineKeyboardButton("8", callback_data="2"),
+                InlineKeyboardButton("9", callback_data="3"),
+            ], [
                 InlineKeyboardButton("4", callback_data="3"),
                 InlineKeyboardButton("5", callback_data="3"),
                 InlineKeyboardButton("6", callback_data="3"),
-                InlineKeyboardButton("7", callback_data="3"),
-                InlineKeyboardButton("8", callback_data="3"),
-                InlineKeyboardButton("9", callback_data="3"),
+            ], [
+                InlineKeyboardButton("1", callback_data="3"),
+                InlineKeyboardButton("2", callback_data="3"),
+                InlineKeyboardButton("3", callback_data="3"),
+            ], [
                 InlineKeyboardButton("10", callback_data="3")
             ],
         ]
