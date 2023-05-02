@@ -129,3 +129,6 @@ dmypy.json
 .pyre/
 
 cfg.yaml
+
+# visual studio code folder
+.vscode/

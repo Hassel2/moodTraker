@@ -1,17 +1,25 @@
 from datetime import datetime
 import yaml
 from mysql.connector import connect, Error
+from mysql.connector.abstracts import MySQLConnectionAbstract
+from typing import Optional
 from yoyo import read_migrations
 from yoyo import get_backend
 
 
 class Database:
     config = None
-    connection = None
+    connection: Optional[MySQLConnectionAbstract] = None
 
+    @staticmethod
+    def _validate_connection():
+        if not Database.connection.is_connected():
+            Database.connect()
+    
 
     @staticmethod
     def form_answer(id_chat, rating, answer_comment=None):
+        Database._validate_connection()
         cursor = Database.connection.cursor()
         insert = (
             """
@@ -25,6 +33,28 @@ class Database:
         Database.connection.commit()
 
         cursor.close()
+
+
+    @staticmethod
+    def insert_if_not_exist(id_chat: int) -> bool:
+        """Insert new user into database if not exsit and return `False`,
+        otherwise return `True`"""
+        Database._validate_connection()
+
+        with Database.connection.cursor() as cursor:
+            cursor.execute(f"SELECT status FROM chat WHERE id_chat = {id_chat}")
+            rows = cursor.fetchone()
+
+            if rows == None:
+                cursor.execute(f"INSERT INTO chat (id_chat, status) VALUES ({id_chat}, 'active')")
+                return False
+
+            elif rows[1] == 'inactive':
+                cursor.execute(f"UPDATE chat SET status='active' WHERE id_chat={id_chat}")
+            
+            Database.connection.commit()
+
+        return True        
 
 
     @staticmethod

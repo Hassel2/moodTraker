@@ -41,11 +41,12 @@ class App:
     ) -> None:
         id_chat = update.effective_chat.id
 
-        Database.new_chat(
-            id_chat=id_chat,
-            gender='male',
-            age=31,
-        )
+        Database.insert_if_not_exist(id_chat)
+        # Database.new_chat(
+        #     id_chat=id_chat,
+        #     gender='male',
+        #     age=31,
+        # )0
 
         await update.message.reply_text(
             "Привет, я помогу тебе отслеживать твое эмоциональное состояние!"
@@ -97,3 +98,7 @@ class App:
         )
 
         await query.edit_message_text(text="Спасибо, ваш ответ записан!")
+
+
+if __name__ == "__main__":
+    App.build_and_listen()
