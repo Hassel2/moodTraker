@@ -49,7 +49,7 @@ class Database:
                 cursor.execute(f"INSERT INTO chat (id_chat, status) VALUES ({id_chat}, 'active')")
                 return False
 
-            elif rows[1] == 'inactive':
+            elif len(rows) == 1:
                 cursor.execute(f"UPDATE chat SET status='active' WHERE id_chat={id_chat}")
             
             Database.connection.commit()
