@@ -37,7 +37,8 @@ class Database:
 
     @staticmethod
     def insert_if_not_exist(id_chat: int) -> bool:
-        """Insert new user into database if not exsit and return `False`,
+        """Insert new user into database if not exsit.
+        Returns `False` if user it
         otherwise return `True`"""
         Database._validate_connection()
 
@@ -47,6 +48,7 @@ class Database:
 
             if rows == None:
                 cursor.execute(f"INSERT INTO chat (id_chat, status) VALUES ({id_chat}, 'active')")
+                Database.connection.commit() #!
                 return False
 
             elif len(rows) == 1:
@@ -54,7 +56,21 @@ class Database:
             
             Database.connection.commit()
 
-        return True        
+        return True
+
+    def add_notification(id_chat, time):
+        Database._validate_connection()
+
+        with Database.connection.cursor() as cursor:
+            cursor.execute(f"SELECT COUNT(*) FROM notification WHERE id_chat={id_chat} AND time='{time}'")
+            rows = cursor.fetchone()
+
+            if rows and rows[0] == 0:
+                cursor.execute(f"INSERT INTO notification VALUES ({id_chat}, '{time}')")
+
+        Database.connection.commit()
+        return True
+
 
 
     @staticmethod

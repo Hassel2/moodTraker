@@ -1,11 +1,26 @@
-import yaml
+# build-in modules
 import asyncio
-import telegram
-import telegram.ext
-from telegram.ext import Application
-from telegram.ext import ContextTypes
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+import datetime
+
+# third-party
+import yaml
+from telegram import (
+    Update,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup
+)
+from telegram.ext import (
+    Application, 
+    ContextTypes,
+    CommandHandler,
+    ConversationHandler,
+    MessageHandler,
+    filters
+)
+
+# local
 from database.database import Database
+
 
 class App:
     config = None 
@@ -27,34 +42,76 @@ class App:
         builder.token(str(App.config["token"]))
         application = builder.build()
 
-        application.add_handler(telegram.ext.CommandHandler("form", App.form))
-        application.add_handler(telegram.ext.CommandHandler("start", App.start))
-        application.add_handler(telegram.ext.CallbackQueryHandler(App.button))
+        noty_set_conv = ConversationHandler(
+            entry_points=[CommandHandler("time", App.time)],
+            states={
+                1: [MessageHandler(filters.Regex(r"^(1\d:\d{2}|2[0-3]:\d{2})\Z"), App.new_notty)]
+            },
+            fallbacks=[CommandHandler("cancel", App.cancel)]
+        )
+
+        application.add_handler(noty_set_conv)
+
+        application.add_handler(CommandHandler("form", App.form))
+        application.add_handler(CommandHandler("start", App.start))
+        # application.add_handler(CommandHandler(App.button))
 
         application.run_polling()
 
 
     @staticmethod
     async def start(
-        update: telegram.Update, 
+        update: Update, 
         context: ContextTypes.DEFAULT_TYPE 
     ) -> None:
         id_chat = update.effective_chat.id
 
         Database.insert_if_not_exist(id_chat)
-        # Database.new_chat(
-        #     id_chat=id_chat,
-        #     gender='male',
-        #     age=31,
-        # )0
 
         await update.message.reply_text(
             "Привет, я помогу тебе отслеживать твое эмоциональное состояние!"
         )
 
+
+    @staticmethod
+    async def time(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        await context.bot.send_message(update.effective_chat.id,
+                                 "Напиши время уведомления в формате ЧЧ:ММ")
+        return 1
+
+
+    @staticmethod
+    async def new_notty(update: Update, context: ContextTypes.DEFAULT_TYPE)-> None:
+        time = update.effective_message.text
+        chat_id = update.effective_chat.id
+        if Database.add_notification(chat_id, time):
+            await App.add_daily_notty(chat_id, time, context)
+            await context.bot.send_message(chat_id, f"Уведолмение в {time} каждый день добавлено.")
+        else:
+            await context.bot.send_message(chat_id, f"Произошла ошибка во время добавления уведомления!")
+        return ConversationHandler.END
+    
+    @staticmethod
+    async def add_daily_notty(chat_id, time, context: ContextTypes.DEFAULT_TYPE):
+        hours, minutes = time.split(":")
+        task_time = datetime.time(hour=int(hours), minute=int(minutes))
+        context.job_queue.run_daily(App.send_test_message, time=task_time, chat_id=chat_id)
+        
+
+    @staticmethod
+    async def send_test_message(context: ContextTypes.DEFAULT_TYPE):
+        await context.bot.send_message(context.job.chat_id, 
+                                       text=f"УВЕДОМЛЕНИЕ!!")
+        
+    
+    @staticmethod
+    async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE)->int:
+        chat_id = update.effective_chat.id
+        await context.bot.send_message(chat_id, "Действие отменено")
+
     @staticmethod 
     async def form(
-        update: telegram.Update, 
+        update: Update, 
         context: ContextTypes.DEFAULT_TYPE 
     ) -> None:
         keyboard = [
@@ -77,7 +134,7 @@ class App:
 
     @staticmethod
     async def button(
-        update: telegram.Update, 
+        update: Update, 
         context: ContextTypes.DEFAULT_TYPE
     ) -> None:
         """Parses the CallbackQuery and updates the message text."""
