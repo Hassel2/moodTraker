@@ -3,4 +3,4 @@ mysql-connector-python
 pymysql
 cryptography
 yoyo-migrations
-python-telegram-bot
+python-telegram-bot[job-queue]
