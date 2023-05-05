@@ -13,7 +13,7 @@ steps = [
         """
         CREATE TABLE IF NOT EXISTS `mood`.`notification` (
             `id_chat` INT NOT NULL,
-            `time` DATE NOT NULL,
+            `time` TIME NOT NULL,
             PRIMARY KEY (`id_chat`, `time`),
             CONSTRAINT `id_chat_FK`
             FOREIGN KEY (`id_chat`)
