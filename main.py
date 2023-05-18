@@ -23,6 +23,7 @@ def main():
 
 
 def start():
+    Database.parse_config("./database/cfg.yaml")
     App.build_and_listen()
     Database.connection.close()
 
