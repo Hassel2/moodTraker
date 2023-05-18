@@ -1,8 +1,11 @@
 from datetime import datetime
+from typing import Optional
+from itertools import count
+import logging
+
 import yaml
 from mysql.connector import connect, Error
 from mysql.connector.abstracts import MySQLConnectionAbstract
-from typing import Optional
 from yoyo import read_migrations
 from yoyo import get_backend
 
@@ -10,9 +13,14 @@ from yoyo import get_backend
 class Database:
     config = None
     connection: Optional[MySQLConnectionAbstract] = None
+    _ids = count(0)
 
     def __init__(self):
+        self.id = next(self._ids)
+        if self.id > 1:
+            logging.warning("There are more than one Database class instances")
         self.connect()
+        
 
     def _validate_connection(self):
         if not self.connection.is_connected():

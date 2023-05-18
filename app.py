@@ -10,7 +10,8 @@ from telegram import (
     InlineKeyboardMarkup
 )
 from telegram.ext import (
-    Application, 
+    Application,
+    Defaults,
     ContextTypes,
     CommandHandler,
     ConversationHandler,
@@ -21,6 +22,9 @@ from telegram.ext import (
 # local
 from database.database import Database
 
+
+# default timezone UTC+3
+TZONE = datetime.timezone(datetime.timedelta(hours=3))
 
 class App:
     config = None 
@@ -36,10 +40,13 @@ class App:
 
         App.database = Database()
 
-        builder = Application.builder()
-
-        builder.token(str(App.config["token"]))
-        application = builder.build()
+        defaults = Defaults(tzinfo=TZONE)
+        application = (
+            Application.builder()
+            .token(str(App.config["token"]))
+            .defaults(defaults)
+            .build()
+        )
 
         noty_set_conv = ConversationHandler(
             entry_points=[CommandHandler("time", App.time)],
@@ -83,7 +90,7 @@ class App:
     async def new_notty(update: Update, context: ContextTypes.DEFAULT_TYPE)-> None:
         time = update.effective_message.text
         chat_id = update.effective_chat.id
-        if Database.add_notification(chat_id, time):
+        if App.database.add_notification(chat_id, time):
             await App.add_daily_notty(chat_id, time, context)
             await context.bot.send_message(chat_id, f"Уведолмение в {time} каждый день добавлено.")
         else:
@@ -157,4 +164,5 @@ class App:
 
 
 if __name__ == "__main__":
+    Database.parse_config("./database/cfg.yaml")
     App.build_and_listen()
