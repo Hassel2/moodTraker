@@ -24,8 +24,8 @@ from database.database import Database
 
 class App:
     config = None 
-
-
+    database: Database = None
+    
     @staticmethod
     def build_and_listen():
         with open("./cfg.yaml", "r") as stream:
@@ -34,8 +34,7 @@ class App:
             except yaml.YAMLError as exc:
                 print(exc)
 
-        Database.parse_config()
-        Database.connect()
+        App.database = Database()
 
         builder = Application.builder()
 

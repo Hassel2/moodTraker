@@ -28,8 +28,8 @@ def start():
 
 
 def setup():
-    Database.parse_config()
-    Database.migrate()
+    Database.parse_config("./database/cfg.yaml")
+    Database.migrate("'./database/migrations'")
 
 
 if __name__ == "__main__":

@@ -11,16 +11,17 @@ class Database:
     config = None
     connection: Optional[MySQLConnectionAbstract] = None
 
-    @staticmethod
-    def _validate_connection():
-        if not Database.connection.is_connected():
-            Database.connect()
-    
+    def __init__(self):
+        self.connect()
 
-    @staticmethod
-    def form_answer(id_chat, rating, answer_comment=None):
-        Database._validate_connection()
-        cursor = Database.connection.cursor()
+    def _validate_connection(self):
+        if not self.connection.is_connected():
+            self.connect()
+
+
+    def form_answer(self, id_chat, rating, answer_comment=None):
+        self._validate_connection()
+        cursor = self.connection.cursor()
         insert = (
             """
             INSERT INTO `answer` (`id_chat`, `answer_time`, `rating`, `answer_comment`)
@@ -30,112 +31,61 @@ class Database:
 
         cursor.execute(insert, (id_chat, datetime.now(), rating, answer_comment))
         
-        Database.connection.commit()
+        self.connection.commit()
 
         cursor.close()
 
 
-    @staticmethod
-    def insert_if_not_exist(id_chat: int) -> bool:
+    def insert_if_not_exist(self, id_chat: int) -> bool:
         """Insert new user into database if not exsit.
         Returns `False` if user it
         otherwise return `True`"""
-        Database._validate_connection()
+        self._validate_connection()
 
-        with Database.connection.cursor() as cursor:
+        with self.connection.cursor() as cursor:
             cursor.execute(f"SELECT status FROM chat WHERE id_chat = {id_chat}")
             rows = cursor.fetchone()
 
             if rows == None:
                 cursor.execute(f"INSERT INTO chat (id_chat, status) VALUES ({id_chat}, 'active')")
-                Database.connection.commit() #!
+                self.connection.commit() #!
                 return False
 
             elif len(rows) == 1:
                 cursor.execute(f"UPDATE chat SET status='active' WHERE id_chat={id_chat}")
             
-            Database.connection.commit()
+            self.connection.commit()
 
         return True
 
-    def add_notification(id_chat, time):
-        Database._validate_connection()
+    def add_notification(self, id_chat, time):
+        self._validate_connection()
 
-        with Database.connection.cursor() as cursor:
+        with self.connection.cursor() as cursor:
             cursor.execute(f"SELECT COUNT(*) FROM notification WHERE id_chat={id_chat} AND time='{time}'")
             rows = cursor.fetchone()
 
             if rows and rows[0] == 0:
                 cursor.execute(f"INSERT INTO notification VALUES ({id_chat}, '{time}')")
 
-        Database.connection.commit()
+        self.connection.commit()
         return True
 
 
-
-    @staticmethod
-    def new_chat(id_chat, gender, age, status='active'):
-        cursor = Database.connection.cursor()
-        select = (
-            """
-            SELECT * FROM `chat`
-            WHERE `id_chat` = %s;
-            """
-        )
-
-        cursor.execute(select, (id_chat, ))
-
-        rows = cursor.fetchone()
-
-        cursor.close()
-
-        if rows == None:
-            cursor = Database.connection.cursor()
-            insert = (
-                """
-                INSERT INTO `chat` (`id_chat`, `gender`, `age`, `status`)
-                VALUES (%s, %s, %s, %s);
-                """
-            )
-
-            cursor.execute(insert, (id_chat, gender, age, status))
-
-            Database.connection.commit()
-
-            cursor.close()
-        elif rows[1] == 'inactive':
-            cursor = Database.connection.cursor()
-            update = (
-                """
-                UPDATE `chat``
-                SET `status`='active'
-                WHERE %s
-                """
-            )
-
-            cursor.execute(update, (id_chat, ))
-
-            Database.connection.commit()
-
-            cursor.close()
-    
-
-    @staticmethod
-    def connect():
+    def connect(self):
         try:
-            Database.connection =  connect(
-                host=str(Database.config["host"]),
-                user=str(Database.config["user"]),
-                password=str(Database.config["password"]),
-                database=str(Database.config["dbname"])
+            self.connection =  connect(
+                host=str(self.config["host"]),
+                user=str(self.config["user"]),
+                password=str(self.config["password"]),
+                database=str(self.config["dbname"])
             )
         except Error as e:
             print(e)
 
-    
-    @staticmethod 
-    def parse_config():
-        with open("./database/cfg.yaml", "r") as stream:
+    @staticmethod
+    def parse_config(config_path: str):
+        with open(config_path, 'r') as stream:
             try:
                 Database.config = yaml.safe_load(stream)["database"]
             except yaml.YAMLError as exc:
@@ -143,9 +93,14 @@ class Database:
 
 
     @staticmethod
-    def migrate():
-        backend = get_backend(f'mysql://{Database.config["user"]}:{Database.config["password"]}@{Database.config["host"]}/{Database.config["dbname"]}')
-        migrations = read_migrations('./database/migrations')
+    def migrate(migrations_path: str):
+        backend = get_backend('mysql://{}:{}@{}/{}'.format(
+            Database.config["user"],
+            Database.config["password"],
+            Database.config["host"],
+            Database.config["dbname"]
+        ))
+        migrations = read_migrations(migrations_path)
 
         with backend.lock():
             # Apply any outstanding migrations
