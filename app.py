@@ -26,9 +26,13 @@ from database.database import Database
 # default timezone UTC+3
 TZONE = datetime.timezone(datetime.timedelta(hours=3))
 
+NEW_NOTTY_MSG = "Ежедневное уведомление в {}:{} включено"
+NOTTY_EXIST_MSG = "У вас уже включено уведомление в это время"
+
 class App:
     config = None 
-    database: Database = None
+    _db: Database = None
+    _application: Application
     
     @staticmethod
     def build_and_listen():
@@ -38,10 +42,10 @@ class App:
             except yaml.YAMLError as exc:
                 print(exc)
 
-        App.database = Database()
+        App._db = Database()
 
         defaults = Defaults(tzinfo=TZONE)
-        application = (
+        App._application = (
             Application.builder()
             .token(str(App.config["token"]))
             .defaults(defaults)
@@ -56,13 +60,13 @@ class App:
             fallbacks=[CommandHandler("cancel", App.cancel)]
         )
 
-        application.add_handler(noty_set_conv)
+        App._application.add_handler(noty_set_conv)
 
-        application.add_handler(CommandHandler("form", App.form))
-        application.add_handler(CommandHandler("start", App.start))
+        App._application.add_handler(CommandHandler("form", App.form))
+        App._application.add_handler(CommandHandler("start", App.start))
         # application.add_handler(CommandHandler(App.button))
 
-        application.run_polling()
+        App._application.run_polling()
 
 
     @staticmethod
@@ -72,7 +76,7 @@ class App:
     ) -> None:
         id_chat = update.effective_chat.id
 
-        Database.insert_if_not_exist(id_chat)
+        App._db.insert_if_not_exist(id_chat)
 
         await update.message.reply_text(
             "Привет, я помогу тебе отслеживать твое эмоциональное состояние!"
@@ -88,24 +92,28 @@ class App:
 
     @staticmethod
     async def new_notty(update: Update, context: ContextTypes.DEFAULT_TYPE)-> None:
-        time = update.effective_message.text
         chat_id = update.effective_chat.id
-        if App.database.add_notification(chat_id, time):
-            await App.add_daily_notty(chat_id, time, context)
-            await context.bot.send_message(chat_id, f"Уведолмение в {time} каждый день добавлено.")
+        hours, minutes = update.effective_message.text.split(":")
+        hours, minutes = int(hours), int(minutes)
+        if App._db.add_notification(chat_id, hours, minutes):
+            notty_time = datetime.time(hour=hours, minute=minutes)
+            await App.add_daily_notty(chat_id, notty_time)
+            await context.bot.send_message(chat_id, 
+                                           NEW_NOTTY_MSG.format(hours, minutes))
         else:
-            await context.bot.send_message(chat_id, f"Произошла ошибка во время добавления уведомления!")
+            await context.bot.send_message(chat_id, 
+                                           NOTTY_EXIST_MSG)
         return ConversationHandler.END
     
     @staticmethod
-    async def add_daily_notty(chat_id, time, context: ContextTypes.DEFAULT_TYPE):
-        hours, minutes = time.split(":")
-        task_time = datetime.time(hour=int(hours), minute=int(minutes))
-        context.job_queue.run_daily(App.send_test_message, time=task_time, chat_id=chat_id)
+    async def add_daily_notty(chat_id, notty_time):
+        App._application.job_queue.run_daily(App.send_mood_form, 
+                                             time=notty_time, 
+                                             chat_id=chat_id)
         
 
     @staticmethod
-    async def send_test_message(context: ContextTypes.DEFAULT_TYPE):
+    async def send_mood_form(context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(context.job.chat_id, 
                                        text=f"УВЕДОМЛЕНИЕ!!")
         
@@ -147,7 +155,7 @@ class App:
         query = update.callback_query
         id_chat = update.effective_chat.id
 
-        Database.form_answer(id_chat, query.data)
+        App._db.form_answer(id_chat, query.data)
 
         # CallbackQueries need to be answered, even if no notification to the user is needed
         # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery

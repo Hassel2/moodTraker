@@ -66,15 +66,19 @@ class Database:
 
         return True
 
-    def add_notification(self, id_chat, time):
+    def add_notification(self, id_chat, hours, minutes):
         self._validate_connection()
 
         with self.connection.cursor() as cursor:
-            cursor.execute(f"SELECT COUNT(*) FROM notification WHERE id_chat={id_chat} AND time='{time}'")
+            cursor.execute(f"SELECT COUNT(*) FROM notification \
+                           WHERE id_chat={id_chat} AND time='{hours}:{minutes}'")
             rows = cursor.fetchone()
 
             if rows and rows[0] == 0:
-                cursor.execute(f"INSERT INTO notification VALUES ({id_chat}, '{time}')")
+                cursor.execute(f"INSERT INTO notification \
+                               VALUES ({id_chat}, '{hours}:{minutes}')")
+            else:
+                return False
 
         self.connection.commit()
         return True
