@@ -82,7 +82,20 @@ class Database:
 
         self.connection.commit()
         return True
+    
 
+    def get_notifications(self):
+        self._validate_connection()
+
+        with self.connection.cursor() as cursor:
+            cursor.execute("SELECT id_chat, time FROM notification")
+            rows = cursor.fetchall()
+
+            # convert datetime.timedelta to datetime.time
+            zero_time = datetime(1, 1, 1, 0, 0)
+            rows = [(r[0], (r[1] + zero_time).time())for r in rows]
+
+        return rows
 
     def connect(self):
         try:

@@ -1,6 +1,7 @@
 # build-in modules
 import asyncio
 import datetime
+import logging
 
 # third-party
 import yaml
@@ -21,6 +22,12 @@ from telegram.ext import (
 
 # local
 from database.database import Database
+
+
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 
 # default timezone UTC+3
@@ -52,10 +59,12 @@ class App:
             .build()
         )
 
+        App.load_noty_jobs()
+
         noty_set_conv = ConversationHandler(
             entry_points=[CommandHandler("time", App.time)],
             states={
-                1: [MessageHandler(filters.Regex(r"^(1\d:\d{2}|2[0-3]:\d{2})\Z"), App.new_notty)]
+                1: [MessageHandler(filters.Regex(r"^(1\d:\d{2}|2[0-3]:\d{2})\Z"), App.new_noty)]
             },
             fallbacks=[CommandHandler("cancel", App.cancel)]
         )
@@ -64,6 +73,7 @@ class App:
 
         App._application.add_handler(CommandHandler("form", App.form))
         App._application.add_handler(CommandHandler("start", App.start))
+        App._application.add_handler(CommandHandler("jobs", App.debug_show_jobs))
         # application.add_handler(CommandHandler(App.button))
 
         App._application.run_polling()
@@ -88,16 +98,20 @@ class App:
         await context.bot.send_message(update.effective_chat.id,
                                  "Напиши время уведомления в формате ЧЧ:ММ")
         return 1
+    
+    @staticmethod
+    async def debug_show_jobs(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        logging.info(App._application.job_queue.jobs)
 
 
     @staticmethod
-    async def new_notty(update: Update, context: ContextTypes.DEFAULT_TYPE)-> None:
+    async def new_noty(update: Update, context: ContextTypes.DEFAULT_TYPE)-> None:
         chat_id = update.effective_chat.id
         hours, minutes = update.effective_message.text.split(":")
         hours, minutes = int(hours), int(minutes)
         if App._db.add_notification(chat_id, hours, minutes):
-            notty_time = datetime.time(hour=hours, minute=minutes)
-            await App.add_daily_notty(chat_id, notty_time)
+            noty_time = datetime.time(hour=hours, minute=minutes)
+            App.add_daily_noty(chat_id, noty_time)
             await context.bot.send_message(chat_id, 
                                            NEW_NOTTY_MSG.format(hours, minutes))
         else:
@@ -106,10 +120,19 @@ class App:
         return ConversationHandler.END
     
     @staticmethod
-    async def add_daily_notty(chat_id, notty_time):
+    def add_daily_noty(chat_id, noty_time):
         App._application.job_queue.run_daily(App.send_mood_form, 
-                                             time=notty_time, 
+                                             time=noty_time, 
                                              chat_id=chat_id)
+    
+    @staticmethod
+    def load_noty_jobs():
+        notifications = App._db.get_notifications()
+        for n in notifications:
+            logging.info(n)
+        
+            App.add_daily_noty(chat_id=n[0], 
+                                     noty_time=n[1])
         
 
     @staticmethod
