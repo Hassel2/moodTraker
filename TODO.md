@@ -9,6 +9,7 @@
 ### App
 - [x] Send notifications by timer  
   - [ ] Loading tasks from the database after restarting the bot
+  - [ ] Send notifications only to active users
 - [ ] Initial conversation with user (filling the form)  
   - [ ] Write user answers to database 
 
