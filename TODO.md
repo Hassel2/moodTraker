@@ -10,6 +10,7 @@
 - [x] Send notifications by timer  
   - [ ] Loading tasks from the database after restarting the bot
   - [ ] Send notifications only to active users
+  - [ ] Select the notification text depending on the time of day (E.g. "Good morning! ...", "Good evening! ...")
 - [ ] Initial conversation with user (filling the form)  
   - [ ] Write user answers to database 
 
